@@ -1,0 +1,66 @@
+---
+title: "Predicciones Futuras"
+author: "Sebastian Caldas"
+date: "8 de marzo de 2015"
+output: html_document
+---
+
+```{r echo=FALSE}
+library(knitr)
+library(ggplot2)
+library(Quandl)
+library(lubridate)
+```
+
+Se importan las series de tiempo COP/USD y USD/COP y se imprimen los 5 primeros valores de las mismas. Se imprimen ambas series pues, aunque en el enunciado se indica que debe ser COP/USD, en clase se menciono que la idea era reconocer la variacion del precio del dolar, que evidentemente se entiende mejor como USD/COP. Esta confusion lleva a esta implementacion.
+
+
+```{r literalA}
+mydata = Quandl("CURRFX/COPUSD", start_date="2000-01-01", end_date="2015-02-23", collapse="daily")
+mydata2 = Quandl("CURRFX/USDCOP", start_date="2000-01-01", end_date="2015-02-23", collapse="daily")
+head(mydata, n=5)
+head(mydata2, n=5)
+```
+
+Se visualiza la evolucion temporal de estas series. 
+
+```{r literalB}
+ggplot(mydata, aes(x = Date, y = Rate)) + geom_line(colour="#F8A21B") +  ggtitle("Currency Exchange Rates - COP vs USD\n2000/01/01-2015/02/23")
+ggplot(mydata2, aes(x = Date, y = Rate)) + geom_line(colour="#F8A21B") + ggtitle("Currency Exchange Rates - USD vs COP\n2000/01/01-2015/02/23")
+```
+
+La visualizacion se divide en a??os.
+
+```{r literalC, fig.height=18, fig.width=18}
+mydata_w_year = mydata
+mydata_w_year$year = year(mydata$Date)
+ggplot(mydata_w_year, aes(x = Date, y = Rate)) + geom_line(colour="#F8A21B") + ggtitle("Currency Exchange Rates - COP vs USD\n2000/01/01-2015/02/23") + facet_wrap(~ year, scales = "free", ncol=3)
+
+mydata_w_year2 = mydata2
+mydata_w_year2$year = year(mydata2$Date)
+ggplot(mydata_w_year2, aes(x = Date, y = Rate)) + geom_line(colour="#F8A21B") + ggtitle("Currency Exchange Rates - COP vs USD\n2000/01/01-2015/02/23") + facet_wrap(~ year, scales = "free", ncol=3)
+```
+
+Se intenta predecir el comportamiento de las series hasta el 2017
+
+```{r literalD}
+my_fit = lm(Rate ~ Date, data = mydata)
+Date = seq(as.Date('2000-01-01'),as.Date('2017-12-31'),by = 1)
+newdates = data.frame(Date)
+my_prediction = predict(my_fit, newdata=newdates)
+Rate = my_prediction
+newdata = data.frame(Date, Rate)
+ggplot() + geom_line(data = newdata, aes(x = Date, y = Rate), colour="#F8A21B") + geom_line(data = mydata, aes(x = Date, y = Rate)) 
+
+my_fit2 = lm(Rate ~ Date, data = mydata2)
+newdates2 = data.frame(Date)
+my_prediction2 = predict(my_fit2, newdata=newdates2)
+Rate = my_prediction2
+newdata2 = data.frame(Date, Rate)
+ggplot() + geom_line(data = newdata2, aes(x = Date, y = Rate), colour="#F8A21B") + geom_line(data = mydata2, aes(x = Date, y = Rate)) 
+```
+
+Se escoge un modelo lineal simple por varias razones: <br>
+  1. Como se tiene una serie de tiempo, no es posible definir un polinomio sobre las fechas para   cada observaci??n.<br>
+  2. Usar glm o gam en este caso arroja los mismos resultados que el uso de lm. Como se explica en foros como 'http://www.reddit.com/r/rstats/comments/2izyw1/difference_between_glm_and_lm_lmyxz_and_glmyxz/', para aprovechas las funciones gml y gam, es necesario conocer funciones que ya se ajusten a los datos o que describan el error asociado a las observaciones. Estas no se conocen.<br>
+  3. Como se ilustra en este ejemplo: http://cran.r-project.org/doc/contrib/Fox-Companion/appendix-timeseries-regression.pdf, las series de tiempo sirven para contrastar diferentes factores que pudieran afectar el comportamiento de nuestra variables, mas alla del simple paso de los dias. El precio del dolar relativo al del peso depende de muchos otros predictores mas alla de la fecha, por lo que el resultado de la prediccion, por cualquier metodo que se haga, estara indudablemente sesgado.  

@@ -1,0 +1,11 @@
+Se tienen tres archivos en lugar de uno.
+
+1. csvtodat.py contiene el código en python para convertir Notas.csv en Notas.dat
+2. csvtodateterminal.py contiene el código en python que llama a comandos de la terminal para realizar la misma tarea.
+
+Se separan estos dos archivos para que sea más claro el hecho que ambos funcionan y son independientes así realicen la misma tarea.
+Ahora, llamar comandos de la terminal con '!' no es posible en mi equipo, solo se logra desde ipython. El tercer archivo es entonces:
+
+3. csvtodat.ipynb contiene código en python para realizar la tarea pedida usando comandos de la terminal. Usa '!'.
+
+El segundo archivo usa es llamados a os. 
